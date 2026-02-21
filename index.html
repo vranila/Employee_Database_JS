@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Database Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header>
+    <h1>Employee Database Management</h1>
+    <button onclick="openModal()">Add Employee</button>
+</header>
+
+<div class="container">
+
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search employee...">
+            <button id="searchBtn">Search</button>
+        </div>
+
+        <div id="employeeList" class="employee-list"></div>
+
+        <div id="pagination" class="pagination"></div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+        <div id="detailView" class="detail-view">
+            <p>Select an employee to view details</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h2>Add / Update Employee</h2>
+
+        <form id="employeeForm">
+            <input type="text" name="firstName" placeholder="First Name" required>
+            <input type="text" name="lastName" placeholder="Last Name" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="text" name="phone" placeholder="Phone (12 digits)" required>
+            <input type="date" name="dob" required>
+            <input type="number" name="salary" placeholder="Salary" required>
+            <input type="text" name="image" placeholder="Profile Image URL" >
+
+            <div class="form-buttons">
+                <button type="submit">Save</button>
+                <button type="button" onclick="closeModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
