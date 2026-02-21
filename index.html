@@ -2,61 +2,116 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Employee Database Management System</title>
+    <title>Employee Dashboard | EDMS Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
+
 <body>
 
-<header>
-    <h1>Employee Database Management</h1>
-    <button onclick="openModal()">Add Employee</button>
-</header>
+<div class="app-container">
 
-<div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2 class="logo">Employee Database Managment System</h2>
+        <nav class="sidebar-nav">
+            <button class="nav-item active">Employees</button>
+            <button id="exportBtn" class="nav-item">Export CSV</button>
+            <button id="themeToggle" class="nav-item">Toggle Theme</button>
+        </nav>
+    </aside>
 
-    <!-- LEFT PANEL -->
-    <div class="left-panel">
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search employee...">
-            <button id="searchBtn">Search</button>
-        </div>
+    <!-- Main Content -->
+    <main class="main-content">
 
-        <div id="employeeList" class="employee-list"></div>
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="filters">
 
-        <div id="pagination" class="pagination"></div>
-    </div>
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Search employee..."
+                >
 
-    <!-- RIGHT PANEL -->
-    <div class="right-panel">
-        <div id="detailView" class="detail-view">
-            <p>Select an employee to view details</p>
-        </div>
-    </div>
+                <select id="roleFilter">
+                    <option value="">All Roles</option>
+                    <option value="Developer">Developer</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Designer">Designer</option>
+                </select>
+
+                <select id="sortSelect">
+                    <option value="">Sort By</option>
+                    <option value="name">Name</option>
+                    <option value="salary">Salary</option>
+                    <option value="dob">Date of Birth</option>
+                </select>
+
+            </div>
+
+            <button id="addEmployeeBtn" class="primary-btn">
+                Add Employee
+            </button>
+        </header>
+
+        <!-- Dashboard Content -->
+        <section class="dashboard">
+
+            <div class="employee-list-panel">
+                <div id="employeeList"></div>
+                <div id="pagination" class="pagination"></div>
+            </div>
+
+            <div class="employee-detail-panel">
+                <div id="detailView" class="detail-view">
+                    <p>Select an employee to view details</p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
 
 </div>
 
-<!-- MODAL -->
+<!-- Modal -->
 <div id="modal" class="modal">
     <div class="modal-content">
+
         <h2>Add / Update Employee</h2>
 
         <form id="employeeForm">
-            <input type="text" name="firstName" placeholder="First Name" required>
-            <input type="text" name="lastName" placeholder="Last Name" required>
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="text" name="phone" placeholder="Phone (12 digits)" required>
-            <input type="date" name="dob" required>
-            <input type="number" name="salary" placeholder="Salary" required>
-            <input type="text" name="image" placeholder="Profile Image URL" >
 
-            <div class="form-buttons">
-                <button type="submit">Save</button>
-                <button type="button" onclick="closeModal()">Cancel</button>
+            <input name="firstName" placeholder="First Name" required>
+            <input name="lastName" placeholder="Last Name" required>
+            <input name="email" type="email" placeholder="Email" required>
+            <input name="phone" placeholder="Phone (12 digits)" required>
+            <input name="dob" type="date" required>
+            <input name="salary" type="number" placeholder="Salary" required>
+
+            <select name="role" required>
+                <option value="">Select Role</option>
+                <option value="Developer">Developer</option>
+                <option value="Manager">Manager</option>
+                <option value="Designer">Designer</option>
+            </select>
+
+            <input name="image" placeholder="Profile Image URL" required>
+
+            <div class="form-actions">
+                <button type="submit" class="primary-btn">Save</button>
+                <button type="button" id="cancelBtn" class="secondary-btn">Cancel</button>
             </div>
+
         </form>
+
     </div>
 </div>
+
+<div id="toastContainer" class="toast-container"></div>
 
 <script src="script.js"></script>
 </body>

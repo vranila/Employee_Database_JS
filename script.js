@@ -1,61 +1,42 @@
-// ==============================
-// STATE MANAGEMENT
-// ==============================
+/* ========= STATE ========= */
 
-let employees = JSON.parse(localStorage.getItem("employees")) || [
-    {
-        id: 1,
-        firstName: "John",
-        lastName: "Doe",
-        email: "john@example.com",
-        phone: "123456789012",
-        dob: "1995-05-10",
-        salary: 75000,
-        image: "https://i.pravatar.cc/150?img=1"
-    },
-    {
-        id: 2,
-        firstName: "Jane",
-        lastName: "Smith",
-        email: "jane@example.com",
-        phone: "987654321098",
-        dob: "1993-08-21",
-        salary: 92000,
-        image: "https://i.pravatar.cc/150?img=2"
-    }
-];
-
+let employees = JSON.parse(localStorage.getItem("employees")) || [];
 let selectedEmployeeId = null;
 let editMode = false;
 let editId = null;
 
-const itemsPerPage = 5;
+const ITEMS_PER_PAGE = 5;
 let currentPage = 1;
 
-
-// ==============================
-// DOM ELEMENTS
-// ==============================
+/* ========= DOM ========= */
 
 const employeeList = document.getElementById("employeeList");
 const detailView = document.getElementById("detailView");
-const modal = document.getElementById("modal");
 const form = document.getElementById("employeeForm");
+const modal = document.getElementById("modal");
 const searchInput = document.getElementById("searchInput");
-const searchBtn = document.getElementById("searchBtn");
+const sortSelect = document.getElementById("sortSelect");
+const roleFilter = document.getElementById("roleFilter");
 const pagination = document.getElementById("pagination");
+const toastContainer = document.getElementById("toastContainer");
+const addBtn = document.getElementById("addEmployeeBtn");
+const cancelBtn = document.getElementById("cancelBtn");
+const exportBtn = document.getElementById("exportBtn");
+const themeToggle = document.getElementById("themeToggle");
 
-
-// ==============================
-// UTILITIES
-// ==============================
+/* ========= UTILITIES ========= */
 
 function saveToLocalStorage() {
     localStorage.setItem("employees", JSON.stringify(employees));
 }
 
-function formatSalary(salary) {
-    return "$" + Number(salary).toLocaleString();
+function showToast(message) {
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.innerText = message;
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => toast.remove(), 3000);
 }
 
 function validateName(name) {
@@ -66,49 +47,53 @@ function validatePhone(phone) {
     return /^[0-9]{12}$/.test(phone);
 }
 
-
-// ==============================
-// RENDER LIST
-// ==============================
+/* ========= RENDER ========= */
 
 function renderList() {
+    let filtered = [...employees];
+
     const searchTerm = searchInput.value.toLowerCase();
+    if (searchTerm) {
+        filtered = filtered.filter(emp =>
+            emp.firstName.toLowerCase().includes(searchTerm) ||
+            emp.lastName.toLowerCase().includes(searchTerm)
+        );
+    }
 
-    let filtered = employees.filter(emp =>
-        emp.firstName.toLowerCase().includes(searchTerm) ||
-        emp.lastName.toLowerCase().includes(searchTerm)
-    );
+    if (roleFilter.value) {
+        filtered = filtered.filter(emp => emp.role === roleFilter.value);
+    }
 
-    const start = (currentPage - 1) * itemsPerPage;
-    const paginated = filtered.slice(start, start + itemsPerPage);
+    if (sortSelect.value === "name") {
+        filtered.sort((a, b) => a.firstName.localeCompare(b.firstName));
+    }
+
+    if (sortSelect.value === "salary") {
+        filtered.sort((a, b) => a.salary - b.salary);
+    }
+
+    if (sortSelect.value === "dob") {
+        filtered.sort((a, b) => new Date(a.dob) - new Date(b.dob));
+    }
+
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
 
     employeeList.innerHTML = "";
-
-    if (paginated.length === 0) {
-        employeeList.innerHTML = "<p>No employees found</p>";
-        return;
-    }
 
     paginated.forEach(emp => {
         const div = document.createElement("div");
         div.className = "employee-item";
-        div.innerText = emp.firstName + " " + emp.lastName;
-
+        div.innerText = `${emp.firstName} ${emp.lastName}`;
         div.onclick = () => {
             selectedEmployeeId = emp.id;
             renderDetails();
         };
-
         employeeList.appendChild(div);
     });
 
     renderPagination(filtered.length);
 }
-
-
-// ==============================
-// RENDER DETAILS
-// ==============================
 
 function renderDetails() {
     const emp = employees.find(e => e.id === selectedEmployeeId);
@@ -121,96 +106,57 @@ function renderDetails() {
     detailView.innerHTML = `
         <img src="${emp.image}" width="120">
         <h2>${emp.firstName} ${emp.lastName}</h2>
-        <p><strong>Email:</strong> ${emp.email}</p>
-        <p><strong>Phone:</strong> ${emp.phone}</p>
-        <p><strong>DOB:</strong> ${emp.dob}</p>
-        <p><strong>Salary:</strong> ${formatSalary(emp.salary)}</p>
+        <p>Role: ${emp.role}</p>
+        <p>Email: ${emp.email}</p>
+        <p>Phone: ${emp.phone}</p>
+        <p>DOB: ${emp.dob}</p>
+        <p>Salary: $${Number(emp.salary).toLocaleString()}</p>
         <button onclick="editEmployee(${emp.id})">Edit</button>
         <button onclick="deleteEmployee(${emp.id})">Delete</button>
     `;
 }
 
-
-// ==============================
-// PAGINATION
-// ==============================
-
 function renderPagination(totalItems) {
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
     pagination.innerHTML = "";
 
     for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement("button");
         btn.innerText = i;
-
-        if (i === currentPage) {
-            btn.style.fontWeight = "bold";
-        }
-
         btn.onclick = () => {
             currentPage = i;
             renderList();
         };
-
         pagination.appendChild(btn);
     }
 }
 
-
-// ==============================
-// ADD / UPDATE
-// ==============================
+/* ========= CRUD ========= */
 
 form.addEventListener("submit", function (e) {
     e.preventDefault();
 
-    const firstName = form.firstName.value.trim();
-    const lastName = form.lastName.value.trim();
-    const email = form.email.value.trim();
-    const phone = form.phone.value.trim();
-    const dob = form.dob.value;
-    const salary = form.salary.value;
-    const image = form.image.value;
+    const data = Object.fromEntries(new FormData(form));
 
-    if (!validateName(firstName)) {
-        alert("First name must contain letters only.");
+    if (!validateName(data.firstName) || !validateName(data.lastName)) {
+        showToast("Names must contain letters only");
         return;
     }
 
-    if (!validateName(lastName)) {
-        alert("Last name must contain letters only.");
-        return;
-    }
-
-    if (!validatePhone(phone)) {
-        alert("Phone number must be exactly 12 digits.");
+    if (!validatePhone(data.phone)) {
+        showToast("Phone must be exactly 12 digits");
         return;
     }
 
     if (editMode) {
         const emp = employees.find(e => e.id === editId);
-        emp.firstName = firstName;
-        emp.lastName = lastName;
-        emp.email = email;
-        emp.phone = phone;
-        emp.dob = dob;
-        emp.salary = salary;
-        emp.image = image;
-
+        Object.assign(emp, data);
         editMode = false;
-        editId = null;
+        showToast("Employee updated successfully");
     } else {
-        const newEmployee = {
-            id: Date.now(),
-            firstName,
-            lastName,
-            email,
-            phone,
-            dob,
-            salary,
-            image
-        };
-        employees.push(newEmployee);
+        data.id = Date.now();
+        employees.push(data);
+        showToast("Employee added successfully");
     }
 
     saveToLocalStorage();
@@ -219,62 +165,28 @@ form.addEventListener("submit", function (e) {
     renderList();
 });
 
-
-// ==============================
-// EDIT FUNCTION
-// ==============================
+/* ========= OTHER FUNCTIONS ========= */
 
 function editEmployee(id) {
     const emp = employees.find(e => e.id === id);
 
-    form.firstName.value = emp.firstName;
-    form.lastName.value = emp.lastName;
-    form.email.value = emp.email;
-    form.phone.value = emp.phone;
-    form.dob.value = emp.dob;
-    form.salary.value = emp.salary;
-    form.image.value = emp.image;
+    for (let key in emp) {
+        if (form[key]) form[key].value = emp[key];
+    }
 
     editMode = true;
     editId = id;
     openModal();
 }
 
-
-// ==============================
-// DELETE FUNCTION
-// ==============================
-
 function deleteEmployee(id) {
-    if (!confirm("Are you sure you want to delete this employee?")) return;
-
     employees = employees.filter(emp => emp.id !== id);
     selectedEmployeeId = null;
-
     saveToLocalStorage();
     renderList();
     renderDetails();
+    showToast("Employee deleted successfully");
 }
-
-
-// ==============================
-// SEARCH
-// ==============================
-
-searchInput.addEventListener("input", () => {
-    currentPage = 1;
-    renderList();
-});
-
-searchBtn.addEventListener("click", () => {
-    currentPage = 1;
-    renderList();
-});
-
-
-// ==============================
-// MODAL CONTROL
-// ==============================
 
 function openModal() {
     modal.style.display = "flex";
@@ -284,10 +196,29 @@ function closeModal() {
     modal.style.display = "none";
 }
 
+/* ========= EVENTS ========= */
 
-// ==============================
-// INITIAL LOAD
-// ==============================
+addBtn.onclick = openModal;
+cancelBtn.onclick = closeModal;
+searchInput.oninput = () => { currentPage = 1; renderList(); };
+sortSelect.onchange = renderList;
+roleFilter.onchange = renderList;
+themeToggle.onclick = () => document.body.classList.toggle("light");
+
+exportBtn.onclick = function () {
+    let csv = "First Name,Last Name,Email,Phone,DOB,Salary,Role\n";
+    employees.forEach(emp => {
+        csv += `${emp.firstName},${emp.lastName},${emp.email},${emp.phone},${emp.dob},${emp.salary},${emp.role}\n`;
+    });
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "employees.csv";
+    link.click();
+};
+
+/* ========= INITIALIZE ========= */
 
 renderList();
 renderDetails();
